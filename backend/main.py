@@ -12,7 +12,7 @@ import language_tool_python
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="EnglishSikho API", description="Video Speech-to-Text and Grammar Correction")
+app = FastAPI(title="EnglishBolo API", description="Video Speech-to-Text and Grammar Correction")
 
 app.add_middleware(
     CORSMiddleware,
@@ -229,4 +229,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

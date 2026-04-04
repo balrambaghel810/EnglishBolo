@@ -15,10 +15,17 @@ interface RecordingState {
   stream: MediaStream | null;
 }
 
+interface VideoDetails {
+  name: string;
+  size: string;
+  type: string;
+}
+
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<TranscriptionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +49,15 @@ function App() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -49,6 +65,11 @@ function App() {
       setSelectedFile(file);
       setRecordedBlob(null);
       setVideoUrl(URL.createObjectURL(file));
+      setVideoDetails({
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type
+      });
       setError(null);
       setResult(null);
     }
@@ -66,8 +87,13 @@ function App() {
         audio: true 
       });
       
+      // Start live preview immediately
       if (liveVideoRef.current) {
         liveVideoRef.current.srcObject = stream;
+        // Ensure the video starts playing
+        liveVideoRef.current.play().catch(err => {
+          console.log('Auto-play prevented, but preview is ready');
+        });
       }
 
       const mediaRecorder = new MediaRecorder(stream, {
@@ -86,7 +112,15 @@ function App() {
         setRecordedBlob(blob);
         setVideoUrl(URL.createObjectURL(blob));
         
-        // Stop camera
+        // Set video details for recorded video
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        setVideoDetails({
+          name: `recorded-video-${timestamp}.webm`,
+          size: formatFileSize(blob.size),
+          type: 'video/webm'
+        });
+        
+        // Stop camera and clear preview
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
         }
@@ -151,6 +185,7 @@ function App() {
   const retakeRecording = () => {
     setRecordedBlob(null);
     setVideoUrl(null);
+    setVideoDetails(null);
     setError(null);
     setResult(null);
   };
@@ -307,9 +342,19 @@ function App() {
                 src={videoUrl}
               />
             </div>
-            <p className="video-info">
-              {selectedFile ? `Uploaded: ${selectedFile.name}` : 'Recorded video'}
-            </p>
+            {videoDetails && (
+              <div className="video-details">
+                <div className="detail-item">
+                  <strong>Name:</strong> {videoDetails.name}
+                </div>
+                <div className="detail-item">
+                  <strong>Size:</strong> {videoDetails.size}
+                </div>
+                <div className="detail-item">
+                  <strong>Type:</strong> {videoDetails.type}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

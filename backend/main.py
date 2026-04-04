@@ -16,10 +16,17 @@ app = FastAPI(title="EnglishBolo API", description="Video Speech-to-Text and Gra
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_origins=[
+        "http://localhost:3000",  # React frontend
+        "http://127.0.0.1:3000",  # React frontend (localhost alternative)
+        "http://127.0.0.1:56994", # Browser preview
+        "http://localhost:56994", # Browser preview alternative
+        "*"  # Allow all origins for development (remove in production)
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicitly include OPTIONS
     allow_headers=["*"],
+    expose_headers=["*"]  # Expose all headers to the client
 )
 
 # Initialize models (lazy loading)
@@ -179,11 +186,11 @@ async def upload_video(file: UploadFile = File(...)):
     """Upload video and process speech-to-text with grammar correction"""
     
     # Validate file type
-    allowed_types = ["video/mp4", "video/mkv", "video/quicktime", "video/x-msvideo"]
+    allowed_types = ["video/mp4", "video/mkv", "video/quicktime", "video/x-msvideo", "video/webm"]
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=400, 
-            detail="Invalid file type. Please upload MP4, MKV, or MOV files."
+            detail="Invalid file type. Please upload MP4, MKV, MOV, or WebM files."
         )
     
     # Create temporary directory for processing

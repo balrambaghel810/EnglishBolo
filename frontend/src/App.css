@@ -245,6 +245,30 @@
   font-weight: 500;
 }
 
+.video-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  text-align: left;
+}
+
+.detail-item {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-item strong {
+  color: #212529;
+  margin-right: 0.5rem;
+}
+
 /* Loading Section */
 .loading-section {
   text-align: center;

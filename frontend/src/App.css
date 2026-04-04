@@ -201,13 +201,17 @@
 .preview-video {
   width: 100%;
   max-width: 800px;
-  height: auto;
+  height: 450px;
+  min-height: 300px;
   display: block;
   border-radius: 12px;
+  object-fit: cover;
+  background: #000;
 }
 
 .live-video {
   background: #000;
+  transform: scaleX(-1);
 }
 
 .recording-indicator {

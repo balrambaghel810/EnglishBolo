@@ -90,6 +90,8 @@ function App() {
       // Start live preview immediately
       if (liveVideoRef.current) {
         liveVideoRef.current.srcObject = stream;
+        liveVideoRef.current.muted = true;
+        liveVideoRef.current.playsInline = true;
         // Ensure the video starts playing
         liveVideoRef.current.play().catch(err => {
           console.log('Auto-play prevented, but preview is ready');
@@ -126,6 +128,7 @@ function App() {
         }
         if (liveVideoRef.current) {
           liveVideoRef.current.srcObject = null;
+          liveVideoRef.current.pause();
         }
       };
 
@@ -230,7 +233,7 @@ function App() {
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount and handle stream changes
   React.useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -244,6 +247,18 @@ function App() {
       }
     };
   }, [recordingState.stream, videoUrl]);
+
+  // Handle live video stream
+  React.useEffect(() => {
+    if (liveVideoRef.current && recordingState.stream) {
+      liveVideoRef.current.srcObject = recordingState.stream;
+      liveVideoRef.current.muted = true;
+      liveVideoRef.current.playsInline = true;
+      liveVideoRef.current.play().catch(err => {
+        console.log('Auto-play prevented:', err);
+      });
+    }
+  }, [recordingState.stream]);
 
   return (
     <div className="App">
@@ -321,6 +336,7 @@ function App() {
                 playsInline
                 muted
                 className="live-video"
+                style={{ width: '100%', height: '450px', objectFit: 'cover' }}
               />
               <div className="recording-indicator">
                 <span className="recording-dot"></span>
@@ -340,6 +356,7 @@ function App() {
                 controls
                 className="preview-video"
                 src={videoUrl}
+                style={{ width: '100%', height: '450px', objectFit: 'cover' }}
               />
             </div>
             {videoDetails && (

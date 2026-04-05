@@ -406,7 +406,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>EnglishBolo</h1>
+        <h1>English Bolo</h1>
         <p>Video Speech-to-Text with Grammar Correction</p>
       </header>
 

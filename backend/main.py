@@ -7,6 +7,7 @@ import logging
 import subprocess
 import whisper
 import language_tool_python
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -125,14 +126,16 @@ def transcribe_audio(audio_path: str) -> str:
 def correct_grammar(text: str) -> str:
     """Correct grammar using available methods"""
     try:
-        logger.info("Starting grammar correction...")
+        logger.info(f"Starting grammar correction for text: '{text[:100]}...'")
         
         # First try language-tool-python if Java is available
         try:
             tool = load_grammar_tool()
             matches = tool.check(text)
             corrected_text = language_tool_python.utils.correct(text, matches)
-            logger.info("Grammar correction completed successfully with language-tool-python")
+            logger.info(f"Grammar correction completed successfully with language-tool-python")
+            logger.info(f"Original: '{text}'")
+            logger.info(f"Corrected: '{corrected_text}'")
             return corrected_text.strip()
         except Exception as java_error:
             logger.warning(f"Language tool failed (likely Java not installed): {str(java_error)}")
@@ -140,7 +143,9 @@ def correct_grammar(text: str) -> str:
             # Fallback to basic grammar correction
             logger.info("Using basic grammar correction fallback...")
             corrected_text = basic_grammar_correction(text)
-            logger.info("Basic grammar correction completed successfully")
+            logger.info(f"Basic grammar correction completed successfully")
+            logger.info(f"Original: '{text}'")
+            logger.info(f"Corrected: '{corrected_text}'")
             return corrected_text.strip()
         
     except Exception as e:
@@ -149,12 +154,62 @@ def correct_grammar(text: str) -> str:
         return text.strip()
 
 def basic_grammar_correction(text: str) -> str:
-    """Basic grammar correction without external dependencies"""
+    """Enhanced grammar correction without external dependencies"""
     if not text:
         return text
     
     # Basic corrections
-    corrected = text
+    corrected = text.strip()
+    
+    # Fix common subject-verb agreement errors
+    corrections = {
+        # Subject-verb agreement
+        r'\b(I is)\b': 'I am',
+        r'\b(I are)\b': 'I am', 
+        r'\b(he is)\b': 'he is',  # Keep correct ones
+        r'\b(she is)\b': 'she is',
+        r'\b(they is)\b': 'they are',
+        r'\b(we is)\b': 'we are',
+        r'\b(you is)\b': 'you are',
+        r'\b(how is you)\b': 'how are you',
+        r'\b(where is you)\b': 'where are you',
+        r'\b(what is you)\b': 'what are you',
+        r'\b(when is you)\b': 'when are you',
+        r'\b(why is you)\b': 'why are you',
+        r'\b(who is you)\b': 'who are you',
+        
+        # Common mistakes
+        r'\b(I wants)\b': 'I want',
+        r'\b(hes)\b': "he's",
+        r'\b(shes)\b': "she's", 
+        r'\b(its a)\b': "it's a",
+        r'\b(there is)\b': "there's",
+        r'\b(I has)\b': 'I have',
+        r'\b(he have)\b': 'he has',
+        r'\b(she have)\b': 'she has',
+        
+        # Articles
+        r'\b(a boy)\b': 'a boy',  # Keep correct
+        r'\b(an boy)\b': 'a boy',
+        r'\b(an girl)\b': 'a girl',
+        r'\b(a apple)\b': 'an apple',
+        r'\b(an orange)\b': 'an orange',
+        
+        # Question formation
+        r'\b(is you)\b': 'are you',
+        r'\b(are he)\b': 'is he',
+        r'\b(are she)\b': 'is she',
+        r'\b(are I)\b': 'am I',
+        
+        # Common phrases
+        r'\b(can I helps)\b': 'can I help',
+        r'\b(can I helps you)\b': 'can I help you',
+        r'\b(I can helps)\b': 'I can help',
+    }
+    
+    # Apply corrections
+    for pattern, replacement in corrections.items():
+        corrected = re.sub(pattern, replacement, corrected, flags=re.IGNORECASE)
     
     # Capitalize first letter of sentences
     corrected = '. '.join(sentence.capitalize() for sentence in corrected.split('. '))

@@ -319,6 +319,8 @@ function App() {
       const formData = new FormData();
       formData.append('file', videoFile);
 
+      console.log("Sending video for processing:", videoFile.name);
+      
       const response = await fetch('http://localhost:8000/upload-video', {
         method: 'POST',
         body: formData,
@@ -330,8 +332,13 @@ function App() {
       }
 
       const data: TranscriptionResult = await response.json();
+      console.log("Grammar API Response:", data);
+      console.log("Original text:", data.original_text);
+      console.log("Corrected text:", data.corrected_text);
+      
       setResult(data);
     } catch (err) {
+      console.error("Processing error:", err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -561,7 +568,12 @@ function App() {
               <div className="result-column">
                 <h3>✅ Corrected Text</h3>
                 <div className="text-content corrected">
-                  {result.corrected_text || 'No correction available'}
+                  {result.corrected_text && result.corrected_text !== result.original_text 
+                    ? result.corrected_text 
+                    : result.corrected_text === result.original_text 
+                      ? 'No grammatical corrections needed'
+                      : 'Correction not available'
+                  }
                 </div>
               </div>
             </div>

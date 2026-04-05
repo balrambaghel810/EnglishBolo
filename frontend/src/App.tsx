@@ -470,13 +470,15 @@ function App() {
           <section className="video-preview-section">
             <h3>📹 Video Preview</h3>
             <div className="video-container">
-              <video
-                ref={videoRef}
-                controls
-                className="preview-video"
-                src={videoUrl}
-                style={{ width: '100%', height: '450px', objectFit: 'cover' }}
-              />
+              <div className="preview-video-wrapper">
+                <video
+                  ref={videoRef}
+                  controls
+                  className="preview-video"
+                  src={videoUrl}
+                  style={{ width: '100%', height: '450px', objectFit: 'cover' }}
+                />
+              </div>
             </div>
             {videoDetails && (
               <div className="video-details">

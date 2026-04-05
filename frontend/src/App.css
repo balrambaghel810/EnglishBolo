@@ -211,7 +211,15 @@
 
 .live-video {
   background: #000;
-  transform: scaleX(-1);
+  /* transform: scaleX(-1); */
+}
+
+.preview-video {
+  background: #000;
+}
+
+.preview-video-wrapper {
+  /* transform: scaleX(-1); */
 }
 
 .recording-indicator {

@@ -190,12 +190,124 @@ function App() {
   };
 
   // Retake recording
-  const retakeRecording = () => {
+  const retakeRecording = async () => {
+    // Stop any ongoing recording first
+    if (recordingState.isRecording && recordingState.mediaRecorder) {
+      recordingState.mediaRecorder.stop();
+    }
+    
+    // Clear timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Stop camera stream
+    if (recordingState.stream) {
+      recordingState.stream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Clear all video and recording states
     setRecordedBlob(null);
     setVideoUrl(null);
     setVideoDetails(null);
     setError(null);
     setResult(null);
+    
+    // Reset recording state completely
+    setRecordingState({
+      isRecording: false,
+      isPaused: false,
+      duration: 0,
+      mediaRecorder: null,
+      stream: null
+    });
+    
+    // Clear live video preview
+    if (liveVideoRef.current) {
+      liveVideoRef.current.srcObject = null;
+      liveVideoRef.current.pause();
+    }
+    
+    // Automatically restart camera for new recording
+    try {
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }, 
+        audio: true 
+      });
+      
+      // Start live preview immediately
+      if (liveVideoRef.current) {
+        liveVideoRef.current.srcObject = stream;
+        liveVideoRef.current.muted = true;
+        liveVideoRef.current.playsInline = true;
+        // Ensure the video starts playing
+        liveVideoRef.current.play().catch(err => {
+          console.log('Auto-play prevented, but preview is ready');
+        });
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8,opus'
+      });
+
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        setRecordedBlob(blob);
+        setVideoUrl(URL.createObjectURL(blob));
+        
+        // Set video details for recorded video
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        setVideoDetails({
+          name: `recorded-video-${timestamp}.webm`,
+          size: formatFileSize(blob.size),
+          type: 'video/webm'
+        });
+        
+        // Stop camera and clear preview
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        if (liveVideoRef.current) {
+          liveVideoRef.current.srcObject = null;
+          liveVideoRef.current.pause();
+        }
+      };
+
+      setRecordingState(prev => ({
+        ...prev,
+        mediaRecorder,
+        stream,
+        isRecording: true,
+        duration: 0
+      }));
+
+      mediaRecorder.start();
+
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          setError('Camera permission denied. Please allow camera access to record video.');
+        } else if (err.name === 'NotFoundError') {
+          setError('No camera found. Please connect a camera and try again.');
+        } else {
+          setError(`Camera error: ${err.message}`);
+        }
+      } else {
+        setError('Failed to access camera. Please check your camera settings.');
+      }
+    }
   };
 
   // Process video (uploaded or recorded)
@@ -312,19 +424,11 @@ function App() {
 
             {/* Record Button */}
             <button
-              onClick={recordingState.isRecording ? stopRecording : startCamera}
-              className={`record-button ${recordingState.isRecording ? 'recording' : ''}`}
-              disabled={isLoading}
+              onClick={startCamera}
+              className="record-button"
+              disabled={isLoading || recordingState.isRecording}
             >
-              {recordingState.isRecording ? (
-                <>
-                  🔴 Stop Recording ({formatTime(recordingState.duration)})
-                </>
-              ) : (
-                <>
-                  🎥 Record Video
-                </>
-              )}
+              🎥 Record Video
             </button>
           </div>
         </section>

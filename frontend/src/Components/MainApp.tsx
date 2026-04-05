@@ -556,16 +556,16 @@ function MainApp() {
         {/* Results Section */}
         {result && (
           <section className="results-section">
-            <h2>📝 Transcription Results</h2>
+            <h2> Transcription Results</h2>
             <div className="results-container">
               <div className="result-column">
-                <h3>📄 Original Transcript</h3>
+                <h3> Original Transcript</h3>
                 <div className="text-content">
                   {result.original_text || 'No transcription available'}
                 </div>
               </div>
               <div className="result-column">
-                <h3>✅ Corrected Text</h3>
+                <h3>Corrected Text</h3>
                 <div className="text-content corrected">
                   {result.corrected_text && result.corrected_text !== result.original_text 
                     ? result.corrected_text 

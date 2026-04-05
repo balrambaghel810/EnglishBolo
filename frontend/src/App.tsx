@@ -141,7 +141,6 @@ function App() {
       }));
 
       mediaRecorder.start();
-      startTimer();
 
     } catch (err) {
       if (err instanceof Error) {
@@ -160,6 +159,11 @@ function App() {
 
   // Start timer for recording
   const startTimer = () => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     timerRef.current = setInterval(() => {
       setRecordingState(prev => ({
         ...prev,
@@ -179,7 +183,8 @@ function App() {
         ...prev,
         isRecording: false,
         mediaRecorder: null,
-        stream: null
+        stream: null,
+        duration: 0
       }));
     }
   };
@@ -259,6 +264,25 @@ function App() {
       });
     }
   }, [recordingState.stream]);
+
+  // Manage timer lifecycle based on recording state
+  React.useEffect(() => {
+    if (recordingState.isRecording) {
+      startTimer();
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [recordingState.isRecording]);
 
   return (
     <div className="App">

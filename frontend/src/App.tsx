@@ -326,27 +326,7 @@ function App() {
                 </>
               )}
             </button>
-
-            {/* Retake Button */}
-            {recordedBlob && (
-              <button
-                onClick={retakeRecording}
-                className="retake-button"
-                disabled={isLoading}
-              >
-                🔄 Retake Recording
-              </button>
-            )}
           </div>
-
-          {/* Processing Button */}
-          <button
-            onClick={handleUpload}
-            disabled={(!selectedFile && !recordedBlob) || isLoading}
-            className="process-button"
-          >
-            {isLoading ? '⏳ Processing...' : '🚀 Process Video'}
-          </button>
         </section>
 
         {/* Live Camera Preview */}
@@ -366,6 +346,17 @@ function App() {
                 <span className="recording-dot"></span>
                 Recording {formatTime(recordingState.duration)}
               </div>
+            </div>
+            
+            {/* Stop Recording Button - Below Live Preview */}
+            <div className="preview-controls">
+              <button
+                onClick={stopRecording}
+                className="stop-recording-button"
+                disabled={isLoading}
+              >
+                🔴 Stop Recording ({formatTime(recordingState.duration)})
+              </button>
             </div>
           </section>
         )}
@@ -396,6 +387,29 @@ function App() {
                 </div>
               </div>
             )}
+            
+            {/* Control Buttons - Below Video Preview */}
+            <div className="preview-controls">
+              {/* Retake Button */}
+              {recordedBlob && (
+                <button
+                  onClick={retakeRecording}
+                  className="retake-button"
+                  disabled={isLoading}
+                >
+                  🔄 Retake Recording
+                </button>
+              )}
+              
+              {/* Process Video Button */}
+              <button
+                onClick={handleUpload}
+                disabled={(!selectedFile && !recordedBlob) || isLoading}
+                className="process-button"
+              >
+                {isLoading ? '⏳ Processing...' : '🚀 Process Video'}
+              </button>
+            </div>
           </section>
         )}
 
